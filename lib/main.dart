@@ -1,7 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shuttlers/ui/dialog/add_member.dart';
+import 'package:shuttlers/ui/screens/home_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
-import 'package:hbcbc/ui/screens/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,13 +14,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'hbcbc',
+      debugShowCheckedModeBanner: true,
+      title: 'Shuttlers',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.indigo,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: HomeScreen(),
+      home: Home(),
     );
   }
 }

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:hbcbc/model/member.dart';
-import 'package:hbcbc/ui/screens/member_history.dart';
-import 'package:hbcbc/utils/pretty.dart';
+import 'package:shuttlers/model/member.dart';
+import 'package:shuttlers/ui/screens/member_history.dart';
+import 'package:shuttlers/utils/pretty.dart';
 
 class MemberCard extends StatelessWidget {
+  //final currentUser = FirebaseAuth.instance.currentUser;
+
   final Member member;
 
   MemberCard(this.member);
 
   Widget build(BuildContext context) {
+    // print(currentUser);
     _openMemberHistory() {
       Navigator.push(
         context,
@@ -63,9 +66,7 @@ class MemberCard extends StatelessWidget {
           children: <Widget>[
             IconButton(
               icon: Icon(Icons.history),
-              onPressed: () {
-                _openMemberHistory();
-              },
+              onPressed: () => _openMemberHistory(),
             ),
           ],
         ),

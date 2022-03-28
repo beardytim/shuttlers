@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hbcbc/model/expense.dart';
+import 'package:shuttlers/model/expense.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:hbcbc/utils/pretty.dart';
+import 'package:shuttlers/utils/math.dart';
+import 'package:shuttlers/utils/pretty.dart';
 
 class ExpenseCard extends StatefulWidget {
   final Ledger ledger;
@@ -66,8 +67,8 @@ class ExpenseCardState extends State<ExpenseCard> {
           onTap: () {
             _showCost(
                 prettyMoney(widget.ledger.cost),
-                prettyMoney(
-                    (widget.ledger.cost / widget.ledger.members.length)));
+                prettyMoney((roundCost(
+                    widget.ledger.cost / widget.ledger.members.length))));
           },
         ),
         Divider(),

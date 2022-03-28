@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hbcbc/model/expense.dart';
-import 'package:hbcbc/utils/pretty.dart';
+import 'package:shuttlers/model/expense.dart';
+import 'package:shuttlers/utils/math.dart';
+import 'package:shuttlers/utils/pretty.dart';
 
 class HistoryCard extends StatelessWidget {
   final Ledger income;
@@ -13,11 +14,14 @@ class HistoryCard extends StatelessWidget {
 
     if (income.type == LedgerType.reimbursement ||
         income.type == LedgerType.depost) {
-      _trailingText = '+${prettyMoney(income.cost / income.members.length)}';
+      _trailingText =
+          '+${prettyMoney(roundCost(income.cost / income.members.length))}';
     } else if (income.type == LedgerType.starting) {
-      _trailingText = '${prettyMoney(income.cost / income.members.length)}';
+      _trailingText =
+          '${prettyMoney(roundCost(income.cost / income.members.length))}';
     } else {
-      _trailingText = '-${prettyMoney(income.cost / income.members.length)}';
+      _trailingText =
+          '-${prettyMoney(roundCost(income.cost / income.members.length))}';
     }
 
     switch (income.type) {

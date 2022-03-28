@@ -8,6 +8,16 @@ enum LedgerType {
   starting,
 }
 
+enum IncomeType {
+  deposit,
+  reimbursement,
+}
+
+enum ExpenseType {
+  game,
+  equipment,
+}
+
 class Ledger implements Comparable<Ledger> {
   final DateTime date;
   final LedgerType type;

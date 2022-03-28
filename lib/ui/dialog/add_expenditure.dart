@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hbcbc/data.dart';
-import 'package:hbcbc/model/member.dart';
-import 'package:hbcbc/utils/pretty.dart';
+import 'package:shuttlers/model/expense.dart';
+import 'package:shuttlers/model/member.dart';
+import 'package:shuttlers/utils/pretty.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:shuttlers/utils/store.dart';
 
 class AddExpenditureDialog extends StatefulWidget {
   AddExpenditureDialog();
@@ -11,32 +11,34 @@ class AddExpenditureDialog extends StatefulWidget {
   AddExpenditureDialogState createState() => AddExpenditureDialogState();
 }
 
-enum _expenseType {
-  game,
-  equipment,
-}
+// enum ExpenseType {
+//   game,
+//   equipment,
+// }
 
 class AddExpenditureDialogState extends State<AddExpenditureDialog> {
   DateTime _date = DateTime.now();
   double _cost = 14.7;
 
+  Store store = Store();
+
   List<Member> members = [];
   List<Member> selectedMembers = [];
 
-  DocumentReference overviewCollection =
-      FirebaseFirestore.instance.collection(overviewRef).doc('0');
+  // DocumentReference overviewCollection =
+  //     FirebaseFirestore.instance.collection(overviewRef).doc('0');
 
-  CollectionReference membersCollection =
-      FirebaseFirestore.instance.collection(memberRef);
-  CollectionReference ledgerCollecction =
-      FirebaseFirestore.instance.collection(ledgerRef);
+  // CollectionReference membersCollection =
+  //     FirebaseFirestore.instance.collection(memberRef);
+  // CollectionReference ledgerCollecction =
+  //     FirebaseFirestore.instance.collection(ledgerRef);
 
   bool _showCostPicker = false;
 
   bool _showMemberPicker = false;
 
   String typeString = 'Game';
-  _expenseType _expType = _expenseType.game;
+  ExpenseType _expType = ExpenseType.game;
 
   @override
   void initState() {
@@ -45,7 +47,7 @@ class AddExpenditureDialogState extends State<AddExpenditureDialog> {
   }
 
   void loadMembers() async {
-    await membersCollection.get().then((value) => value.docs.forEach((element) {
+    await store.member.get().then((value) => value.docs.forEach((element) {
           members.add(Member.fromMap(
               element.data() as Map<String, dynamic>, element.id));
         }));
@@ -90,43 +92,50 @@ class AddExpenditureDialogState extends State<AddExpenditureDialog> {
                 _showDialog("Noone selected.");
                 return null;
               }
-              double _costPerMember = _cost / selectedMembers.length;
-              selectedMembers.forEach((member) async {
-                double _balance = await membersCollection
-                    .doc(member.id)
-                    .get()
-                    .then((DocumentSnapshot data) {
-                  Map<String, dynamic> temp =
-                      data.data() as Map<String, dynamic>;
+              //double _costPerMember = _cost / selectedMembers.length;
+              // selectedMembers.forEach((member) async {
+              //   double _balance = await membersCollection
+              //       .doc(member.id)
+              //       .get()
+              //       .then((DocumentSnapshot data) {
+              //     Map<String, dynamic> temp =
+              //         data.data() as Map<String, dynamic>;
 
-                  return temp['bank'];
-                });
-                membersCollection
-                    .doc(member.id)
-                    .update({'bank': _balance - _costPerMember});
-              });
-              List<String> memberIds = [];
-              selectedMembers.reversed.forEach((element) {
-                memberIds.add(element.id);
-              });
-              double _bankBalance =
-                  await overviewCollection.get().then((DocumentSnapshot data) {
-                Map<String, dynamic> temp = data.data() as Map<String, dynamic>;
+              //     return temp['bank'];
+              //   });
+              //   membersCollection
+              //       .doc(member.id)
+              //       .update({'bank': _balance - _costPerMember});
+              // });
+              // List<String> memberIds = [];
+              // selectedMembers.reversed.forEach((element) {
+              //   memberIds.add(element.id);
+              // });
+              // double _bankBalance =
+              //     await overviewCollection.get().then((DocumentSnapshot data) {
+              //   Map<String, dynamic> temp = data.data() as Map<String, dynamic>;
 
-                return temp['bank'];
-              });
-              overviewCollection.update({
-                'bank': _bankBalance - _cost,
-              });
+              //   return temp['bank'];
+              // });
+              // overviewCollection.update({
+              //   'bank': _bankBalance - _cost,
+              // });
 
-              ledgerCollecction.doc().set({
-                'date': Timestamp.fromDate(_date),
-                'members': memberIds,
-                'cost': _cost,
-                'type': _expType.index + 2,
-                'category': 1,
-                'mString': _selectedMembersText,
-              });
+              // ledgerCollecction.doc().set({
+              //   'date': Timestamp.fromDate(_date),
+              //   'members': memberIds,
+              //   'cost': _cost,
+              //   'type': _expType.index + 2,
+              //   'category': 1,
+              //   'mString': _selectedMembersText,
+              // });
+              await store.addExpenditure(
+                date: _date,
+                members: selectedMembers,
+                cost: _cost,
+                type: _expType,
+                catergory: 1,
+              );
               Navigator.of(context).pop();
             },
           )
@@ -217,16 +226,16 @@ class AddExpenditureDialogState extends State<AddExpenditureDialog> {
               child: Icon(Icons.arrow_forward),
             ),
             title: Text(typeString),
-            trailing: PopupMenuButton<_expenseType>(
-              onSelected: (_expenseType value) {
+            trailing: PopupMenuButton<ExpenseType>(
+              onSelected: (ExpenseType value) {
                 setState(() {
-                  if (value == _expenseType.game) {
-                    _expType = _expenseType.game;
+                  if (value == ExpenseType.game) {
+                    _expType = ExpenseType.game;
                     typeString = 'Game';
                     selectedMembers = [];
                     _selectedMembersText = "";
-                  } else if (value == _expenseType.equipment) {
-                    _expType = _expenseType.equipment;
+                  } else if (value == ExpenseType.equipment) {
+                    _expType = ExpenseType.equipment;
                     typeString = 'Equipment';
                     selectedMembers = [];
                     members.forEach((element) {
@@ -237,13 +246,13 @@ class AddExpenditureDialogState extends State<AddExpenditureDialog> {
                 });
               },
               itemBuilder: (BuildContext context) =>
-                  <PopupMenuEntry<_expenseType>>[
-                PopupMenuItem<_expenseType>(
-                  value: _expenseType.game,
+                  <PopupMenuEntry<ExpenseType>>[
+                PopupMenuItem<ExpenseType>(
+                  value: ExpenseType.game,
                   child: Text('Game'),
                 ),
-                PopupMenuItem<_expenseType>(
-                  value: _expenseType.equipment,
+                PopupMenuItem<ExpenseType>(
+                  value: ExpenseType.equipment,
                   child: Text('Equipment'),
                 ),
               ],

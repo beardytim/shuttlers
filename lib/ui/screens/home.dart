@@ -1,15 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hbcbc/data.dart';
-import 'package:hbcbc/model/expense.dart';
-import 'package:hbcbc/model/member.dart';
-import 'package:hbcbc/ui/dialog/add_expenditure.dart';
-import 'package:hbcbc/ui/dialog/add_member.dart';
-import 'package:hbcbc/ui/widgets/member_card.dart';
-import 'package:hbcbc/ui/widgets/expense_card.dart';
-import 'package:hbcbc/ui/widgets/member_card_admin.dart';
-import 'package:hbcbc/utils/pretty.dart';
+import 'package:shuttlers/model/expense.dart';
+import 'package:shuttlers/model/member.dart';
+import 'package:shuttlers/passwords.dart';
+import 'package:shuttlers/ui/dialog/add_expenditure.dart';
+import 'package:shuttlers/ui/dialog/add_member.dart';
+import 'package:shuttlers/ui/widgets/member_card.dart';
+import 'package:shuttlers/ui/widgets/expense_card.dart';
+import 'package:shuttlers/ui/widgets/member_card_admin.dart';
+import 'package:shuttlers/utils/auth.dart';
+import 'package:shuttlers/utils/pretty.dart';
+
+import '../../utils/store.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -19,44 +22,32 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   TabController? _tabController;
-  Stream<QuerySnapshot>? membersStream;
-  Stream<QuerySnapshot>? ledgerStream;
+  Store store = Store();
+  Auth auth = Auth();
 
-  FirebaseAuth auth = FirebaseAuth.instance;
+  FirebaseAuth authOld = FirebaseAuth.instance;
   User? user;
 
   @override
   void initState() {
     super.initState();
 
-    this.user = auth.currentUser;
-    auth.authStateChanges().listen((usr) {
-      setState(() {
-        this.user = usr;
+    //this.user = auth.currentUser;
+    auth.auth.authStateChanges()
+      ..listen((event) {
+        setState(() {
+          this.user = event;
+        });
       });
-    });
+    // authOld.authStateChanges().listen((usr) {
+    //   setState(() {
+    //     this.user = usr;
+    //   });
+    // });
 
     //tabcontroller
     _tabController = TabController(length: 2, vsync: this, initialIndex: 0);
     _tabController!.addListener(_handleTabIndex);
-
-    //firestore streams
-    //members orded by name
-    membersStream = FirebaseFirestore.instance
-        .collection(memberRef)
-        .orderBy('name')
-        .snapshots();
-    //ledgers with category 1 will be shown here and ordered by date
-    ledgerStream = FirebaseFirestore.instance
-        .collection(ledgerRef)
-        .orderBy('date', descending: true)
-        .where('category', isEqualTo: 1)
-        .snapshots();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
   }
 
   @override
@@ -84,72 +75,79 @@ class HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Future<void> _changePasswordDialog(BuildContext context) async {
+  Future<void> changePasswordDialog(BuildContext context) async {
+    TextEditingController _currentPasswordController = TextEditingController();
     TextEditingController _passwordController = TextEditingController();
     TextEditingController _passwordControllerConfirm = TextEditingController();
     return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Change Password'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  obscureText: true,
-                  controller: _passwordController,
-                  decoration: InputDecoration(hintText: 'Enter New Password'),
-                ),
-                TextFormField(
-                  obscureText: true,
-                  controller: _passwordControllerConfirm,
-                  decoration: InputDecoration(hintText: 'Confirm New Password'),
-                )
-              ],
-            ),
-            actions: [
-              TextButton(
-                child: Text('CANCEL'),
-                onPressed: () {
-                  setState(() {
-                    Navigator.pop(context);
-                  });
-                },
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Change Password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                obscureText: true,
+                controller: _currentPasswordController,
+                decoration: InputDecoration(hintText: 'Enter Password'),
               ),
-              TextButton(
-                child: Text('CHANGE'),
-                onPressed: () async {
-                  setState(() {});
-
-                  if (_passwordController.text ==
-                      _passwordControllerConfirm.text) {
-                    try {
-                      // if persistance causing issues with the signedIn bool could just sign out before anyone logs in?!
-                      //await auth.signOut();
-
-                      await auth.currentUser!
-                          .updatePassword(_passwordController.text);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Password changed!")));
-                    } catch (e) {
-                      print(e);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Something went wrong.")));
-                    }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Passwords didn't match!")));
-                  }
-
-                  Navigator.pop(context);
-                },
+              TextFormField(
+                obscureText: true,
+                controller: _passwordController,
+                decoration: InputDecoration(hintText: 'Enter New Password'),
               ),
+              TextFormField(
+                obscureText: true,
+                controller: _passwordControllerConfirm,
+                decoration: InputDecoration(hintText: 'Confirm New Password'),
+              )
             ],
-          );
-        });
+          ),
+          actions: [
+            TextButton(
+              child: Text('CANCEL'),
+              onPressed: () {
+                setState(() {
+                  Navigator.pop(context);
+                });
+              },
+            ),
+            TextButton(
+              child: Text('CHANGE'),
+              onPressed: () async {
+                setState(() {});
+
+                if (_passwordController.text ==
+                    _passwordControllerConfirm.text) {
+                  try {
+                    await auth.changePassowrd(
+                      //email: email,
+                      password: _currentPasswordController.text,
+                      newPassword: _passwordController.text,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Password changed!")));
+                  } catch (e) {
+                    print(e);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Something went wrong.")));
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Passwords didn't match!")));
+                }
+
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  Future<void> _passwordDialog(BuildContext context) async {
+  Future<void> passwordDialog(BuildContext context) async {
     TextEditingController _passwordController = TextEditingController();
     return showDialog(
         context: context,
@@ -175,11 +173,9 @@ class HomeScreenState extends State<HomeScreen>
                 onPressed: () async {
                   setState(() {});
                   try {
-                    // if persistance causing issues with the signedIn bool could just sign out before anyone logs in?!
-                    //await auth.signOut();
-                    await auth.signInWithEmailAndPassword(
-                        email: "tim.simmonds1@gmail.com",
-                        password: _passwordController.text);
+                    //email is stored in a string in passwords.dart
+                    await authOld.signInWithEmailAndPassword(
+                        email: email, password: _passwordController.text);
                     ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(content: Text("Logged in!")));
                   } catch (e) {
@@ -195,177 +191,137 @@ class HomeScreenState extends State<HomeScreen>
         });
   }
 
-  Widget build(BuildContext context) {
-    Column _buildMembers() {
-      return Column(
-        children: <Widget>[
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: membersStream,
-              builder: (BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (!snapshot.hasData)
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                return ListView(
-                  children: snapshot.data!.docs.map((document) {
-                    Map<String, dynamic> data =
-                        document.data()! as Map<String, dynamic>;
-                    return user != null
-                        ? MemberCardAdmin(
-                            Member.fromMap(data, document.id),
-                          )
-                        : MemberCard(Member.fromMap(data, document.id));
-                  }).toList(),
+  Column _buildMembers() {
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: store.membersStream(),
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (!snapshot.hasData)
+                return Center(
+                  child: CircularProgressIndicator(),
                 );
-              },
-            ),
+              return ListView(
+                children: snapshot.data!.docs.map((document) {
+                  Map<String, dynamic> data =
+                      document.data()! as Map<String, dynamic>;
+                  return user != null
+                      ? MemberCardAdmin(
+                          Member.fromMap(data, document.id),
+                        )
+                      : MemberCard(Member.fromMap(data, document.id));
+                }).toList(),
+              );
+            },
           ),
-        ],
-      );
-    }
-
-    Column _buildExpenditure() {
-      return Column(
-        children: <Widget>[
-          Expanded(
-            child: StreamBuilder(
-              stream: ledgerStream,
-              builder: (BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-                return ListView(
-                  children: snapshot.data!.docs.map((document) {
-                    Map<String, dynamic> data =
-                        document.data()! as Map<String, dynamic>;
-                    return ExpenseCard(
-                      Ledger.fromMap(data),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ),
-        ],
-      );
-    }
-
-    BottomAppBar _buildBottom() {
-      return BottomAppBar(
-        child: SizedBox(
-          height: 40,
-          child: _tabController!.index == 0
-              ? Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
-                    child: StreamBuilder<DocumentSnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection(overviewRef)
-                            .doc("0")
-                            .snapshots(),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<DocumentSnapshot> snapshot) {
-                          if (snapshot.hasError) {
-                            return Text(
-                              'Something went wrong...',
-                              style: TextStyle(color: Colors.white),
-                            );
-                          }
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Text(
-                              'Loading',
-                              style: TextStyle(color: Colors.white),
-                            );
-                          }
-                          Map<String, dynamic> data =
-                              snapshot.data!.data() as Map<String, dynamic>;
-                          return Text(
-                            'Bank ${prettyMoney(data['bank'])}',
-                            style: TextStyle(color: Colors.white),
-                          );
-                        }),
-                  )
-                  // child: FutureBuilder<DocumentSnapshot>(
-                  //   future: FirebaseFirestore.instance
-                  //       .collection(overviewRef)
-                  //       .doc('0')
-                  //       .get(),
-                  //   builder: (BuildContext context,
-                  //       AsyncSnapshot<DocumentSnapshot> snapshot) {
-                  //     if (snapshot.hasError) {
-                  //       return Text('something went wrong...');
-                  //     }
-                  //     if (snapshot.connectionState == ConnectionState.done) {
-                  //       Map<String, dynamic> data =
-                  //           snapshot.data!.data() as Map<String, dynamic>;
-                  //       return Text(
-                  //         'Bank: ${prettyMoney(data['bank'])}',
-                  //         style: TextStyle(color: Colors.white),
-                  //       );
-                  //     }
-                  //     return Text(
-                  //       'Loading',
-                  //       style: TextStyle(color: Colors.white),
-                  //     );
-                  //   },
-                  // ),
-
-                  )
-              : null,
         ),
-        shape: user != null ? CircularNotchedRectangle() : null,
-        color: Colors.blue,
-      );
-    }
+      ],
+    );
+  }
 
-    FloatingActionButton _bottomFAB() {
-      return _tabController!.index == 0
-          ? FloatingActionButton(
-              onPressed: () {
-                _openAddMemberDialog();
-              },
-              child: Icon(Icons.person_add, size: 20.0),
-            )
-          : FloatingActionButton(
-              onPressed: () {
-                _openAddExpenditureDialog();
-              },
-              child: Icon(Icons.add, size: 20.0),
-            );
-    }
+  Column _buildExpenditure() {
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: StreamBuilder(
+            stream: store.ledgerStream(),
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (!snapshot.hasData) {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+              return ListView(
+                children: snapshot.data!.docs.map((document) {
+                  Map<String, dynamic> data =
+                      document.data()! as Map<String, dynamic>;
+                  return ExpenseCard(
+                    Ledger.fromMap(data),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
 
+  BottomAppBar _buildBottom() {
+    return BottomAppBar(
+      child: SizedBox(
+        height: 40,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+            child: StreamBuilder<DocumentSnapshot>(
+                stream: store.overviewStream(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<DocumentSnapshot> snapshot) {
+                  if (snapshot.hasError) {
+                    return Text(
+                      'Something went wrong...',
+                      style: TextStyle(color: Colors.white),
+                    );
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Text(
+                      'Loading',
+                      style: TextStyle(color: Colors.white),
+                    );
+                  }
+                  Map<String, dynamic> data =
+                      snapshot.data!.data() as Map<String, dynamic>;
+                  return Text(
+                    'Bank ${prettyMoney(data['bank'])}',
+                    style: TextStyle(color: Colors.white),
+                  );
+                }),
+          ),
+        ),
+      ),
+      shape: user != null ? CircularNotchedRectangle() : null,
+      color: Theme.of(context).primaryColor,
+    );
+  }
+
+  FloatingActionButton _bottomFAB() {
+    return _tabController!.index == 0
+        ? FloatingActionButton(
+            onPressed: () {
+              _openAddMemberDialog();
+              //_openAddMemberFlow();
+            },
+            child: Icon(Icons.person_add, size: 20.0),
+          )
+        : FloatingActionButton(
+            onPressed: () {
+              _openAddExpenditureDialog();
+            },
+            child: Icon(Icons.add, size: 20.0),
+          );
+  }
+
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("hbcbc"),
+        title: Text("Shuttlers"),
         actions: [
           user == null
               ? IconButton(
                   onPressed: () async {
-                    _passwordDialog(context);
-                    // try {
-                    //   // if persistance causing issues with the signedIn bool could just sign out before anyone logs in?!
-                    //   //await auth.signOut();
-                    //   await auth.signInWithEmailAndPassword(
-                    //       email: "tim.simmonds1@gmail.com",
-                    //       password: "TIMISCOOL");
-                    // } catch (e) {
-                    //   print(e);
-                    // }
-                    //await auth.currentUser().then((value) => print(value.email));
+                    passwordDialog(context);
                   },
                   icon: Icon(Icons.login),
                 )
               : IconButton(
                   onPressed: () async {
                     try {
-                      await auth.signOut();
+                      await authOld.signOut();
                     } catch (e) {
                       print(e);
                     }
@@ -376,7 +332,7 @@ class HomeScreenState extends State<HomeScreen>
               ? Container()
               : IconButton(
                   onPressed: () async {
-                    _changePasswordDialog(context);
+                    changePasswordDialog(context);
                   },
                   icon: Icon(Icons.update)),
         ],

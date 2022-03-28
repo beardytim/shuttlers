@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hbcbc/data.dart';
-import 'package:hbcbc/model/expense.dart';
-import 'package:hbcbc/model/member.dart';
-import 'package:hbcbc/ui/widgets/history_card.dart';
-import 'package:hbcbc/utils/pretty.dart';
+import 'package:shuttlers/data.dart';
+import 'package:shuttlers/model/expense.dart';
+import 'package:shuttlers/model/member.dart';
+import 'package:shuttlers/ui/widgets/history_card.dart';
 
 class UserHistoryScreen extends StatefulWidget {
   final Member member;

@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hbcbc/data.dart';
-import 'package:hbcbc/model/member.dart';
-import 'package:hbcbc/ui/dialog/add_funds.dart';
-import 'package:hbcbc/ui/screens/member_history.dart';
-import 'package:hbcbc/utils/pretty.dart';
+import 'package:shuttlers/data.dart';
+import 'package:shuttlers/model/member.dart';
+import 'package:shuttlers/ui/dialog/add_funds.dart';
+import 'package:shuttlers/ui/screens/member_history.dart';
+import 'package:shuttlers/utils/pretty.dart';
 
 class MemberCardAdmin extends StatelessWidget {
   final Member member;

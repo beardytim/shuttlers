@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hbcbc/data.dart';
-import 'package:hbcbc/model/member.dart';
-
-import 'package:hbcbc/utils/pretty.dart';
+import 'package:shuttlers/model/member.dart';
+import 'package:shuttlers/utils/pretty.dart';
+import 'package:shuttlers/utils/store.dart';
 import 'package:numberpicker/numberpicker.dart';
+
+import '../../model/expense.dart';
 
 class AddFundsDialog extends StatefulWidget {
   final Member member;
@@ -13,23 +13,17 @@ class AddFundsDialog extends StatefulWidget {
   AddFundsDialogState createState() => AddFundsDialogState();
 }
 
-enum _incomeType { deposit, reimbursement }
+// enum IncomeType { deposit, reimbursement }
 
 class AddFundsDialogState extends State<AddFundsDialog> {
   DateTime _date = DateTime.now();
   double _fundsToAdd = 10.0;
   bool _showCostPicker = true;
-  bool _showDatePicker = false;
 
   String typeString = 'Deposit';
-  _incomeType _incType = _incomeType.deposit;
+  IncomeType _incType = IncomeType.deposit;
 
-  DocumentReference overviewCollection =
-      FirebaseFirestore.instance.collection(overviewRef).doc('0');
-  CollectionReference membersCollection =
-      FirebaseFirestore.instance.collection(memberRef);
-  CollectionReference ledgerCollecction =
-      FirebaseFirestore.instance.collection(ledgerRef);
+  Store store = Store();
 
   @override
   Widget build(BuildContext context) {
@@ -39,26 +33,33 @@ class AddFundsDialogState extends State<AddFundsDialog> {
         actions: <Widget>[
           TextButton(
             onPressed: () async {
-              double _bankBalance =
-                  await overviewCollection.get().then((DocumentSnapshot data) {
-                Map<String, dynamic> temp = data.data() as Map<String, dynamic>;
+              // double _bankBalance =
+              //     await overviewCollection.get().then((DocumentSnapshot data) {
+              //   Map<String, dynamic> temp = data.data() as Map<String, dynamic>;
 
-                return temp['bank'];
-              });
-              overviewCollection.update({
-                'bank': _bankBalance + _fundsToAdd,
-              });
+              //   return temp['bank'];
+              // });
+              // overviewCollection.update({
+              //   'bank': _bankBalance + _fundsToAdd,
+              // });
 
-              membersCollection.doc(widget.member.id).update({
-                'bank': widget.member.bank + _fundsToAdd,
-              });
-              ledgerCollecction.doc().set({
-                'date': Timestamp.fromDate(_date),
-                'members': [widget.member.id],
-                'cost': _fundsToAdd,
-                'type': _incType.index,
-                'category': 0,
-              });
+              // membersCollection.doc(widget.member.id).update({
+              //   'bank': widget.member.bank + _fundsToAdd,
+              // });
+              // ledgerCollecction.doc().set({
+              //   'date': Timestamp.fromDate(_date),
+              //   'members': [widget.member.id],
+              //   'cost': _fundsToAdd,
+              //   'type': _incType.index,
+              //   'category': 0,
+              // });
+
+              await store.addFunds(
+                data: widget.member,
+                funds: _fundsToAdd,
+                type: _incType,
+                date: _date,
+              );
               Navigator.of(context).pop();
             },
             child: Text(
@@ -133,26 +134,27 @@ class AddFundsDialogState extends State<AddFundsDialog> {
               child: Icon(Icons.arrow_forward),
             ),
             title: Text(typeString),
-            trailing: PopupMenuButton<_incomeType>(
-              onSelected: (_incomeType value) {
+            trailing: PopupMenuButton<IncomeType>(
+              onSelected: (IncomeType value) {
+                print(_incType.index);
                 setState(() {
-                  if (value == _incomeType.deposit) {
-                    _incType = _incomeType.deposit;
+                  if (value == IncomeType.deposit) {
+                    _incType = IncomeType.deposit;
                     typeString = 'Deposit';
-                  } else if (value == _incomeType.reimbursement) {
-                    _incType = _incomeType.reimbursement;
+                  } else if (value == IncomeType.reimbursement) {
+                    _incType = IncomeType.reimbursement;
                     typeString = 'Reimbusement';
                   }
                 });
               },
               itemBuilder: (BuildContext context) =>
-                  <PopupMenuEntry<_incomeType>>[
-                PopupMenuItem<_incomeType>(
-                  value: _incomeType.deposit,
+                  <PopupMenuEntry<IncomeType>>[
+                PopupMenuItem<IncomeType>(
+                  value: IncomeType.deposit,
                   child: Text('Deposit'),
                 ),
-                PopupMenuItem<_incomeType>(
-                  value: _incomeType.reimbursement,
+                PopupMenuItem<IncomeType>(
+                  value: IncomeType.reimbursement,
                   child: Text('Reimbusement'),
                 ),
               ],
