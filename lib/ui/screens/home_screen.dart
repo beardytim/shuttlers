@@ -207,7 +207,6 @@ class _MenuScreenState extends State<MenuScreen> {
                     ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(content: Text("Logged in!")));
                   } catch (e) {
-                    print(e);
                     ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(content: Text("Login failed.")));
                   }

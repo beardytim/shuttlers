@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:holding_gesture/holding_gesture.dart';
-import 'package:shuttlers/utils/pretty.dart';
 import 'package:shuttlers/utils/store.dart';
-import 'package:numberpicker/numberpicker.dart';
 import 'package:shuttlers/model/member.dart';
 
 class AddMemberDialog extends StatefulWidget {
@@ -11,17 +9,12 @@ class AddMemberDialog extends StatefulWidget {
   AddMemberDialogState createState() => AddMemberDialogState();
 }
 
-//TODO
-//https://stackoverflow.com/questions/66228627/how-can-i-change-the-labels-of-the-continue-cancel-buttons-in-flutter-stepper
-// check answer below first anwer to change last step to save and not continue (Y)
-
 class AddMemberDialogState extends State<AddMemberDialog> {
   final nameInput = TextEditingController();
   Store store = Store();
-  int _currentStep = 0;
 
-  double _sB = 0.0;
   double _startingBalance = 10.0;
+  int _currentStep = 0;
 
   stepTapped(int step) {
     setState(() => _currentStep = step);
@@ -44,12 +37,20 @@ class AddMemberDialogState extends State<AddMemberDialog> {
       _showDialog("Please enter a name.");
       return null;
     }
-    await store.addMember(
-      Member(
-          id: '0',
-          name: nameInput.text,
-          bank: double.parse(_startingBalance.toStringAsFixed(2))),
-    );
+    try {
+      await store.addMember(
+        Member(
+            id: '0',
+            name: nameInput.text,
+            bank: double.parse(_startingBalance.toStringAsFixed(2))),
+      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Added ${nameInput.text}.")));
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Something went wrong.")));
+    }
+
     Navigator.pop(context);
   }
 
@@ -71,7 +72,7 @@ class AddMemberDialogState extends State<AddMemberDialog> {
         title: Text('Add Member'),
       ),
       body: Stepper(
-        type: StepperType.vertical, //try horz too
+        type: StepperType.vertical,
         physics: ScrollPhysics(),
         currentStep: _currentStep,
         onStepTapped: (step) => stepTapped(step),
@@ -93,50 +94,9 @@ class AddMemberDialogState extends State<AddMemberDialog> {
             state: _currentStep >= 0 ? StepState.complete : StepState.disabled,
           ),
           Step(
-            //REBUILD INPUT HERE...
             title: Text('Amount'),
-            // content: DecimalNumberPicker(
-            //   value: _startingBalance,
-            //   minValue: 0,
-            //   maxValue: 50,
-            //   decimalPlaces: 2,
-            //   onChanged: (value) =>
-            //       setState(() => _startingBalance = value.toDouble()),
-            // ),
             isActive: _currentStep >= 0,
             state: _currentStep >= 1 ? StepState.complete : StepState.disabled,
-            // content: Column(
-            //   children: [
-            //     Row(
-            //       children: [
-            //         moneyInput(1),
-            //         moneyInput(2),
-            //         moneyInput(3),
-            //       ],
-            //     ),
-            //     Row(
-            //       children: [
-            //         moneyInput(4),
-            //         moneyInput(5),
-            //         moneyInput(6),
-            //       ],
-            //     ),
-            //     Row(
-            //       children: [
-            //         moneyInput(7),
-            //         moneyInput(8),
-            //         moneyInput(9),
-            //       ],
-            //     ),
-            //     Row(
-            //       children: [
-            //         moneyInput(10.17),
-            //         moneyInput(0),
-            //         moneyInput("C"),
-            //       ],
-            //     ),
-            //  ],
-            //),
             content: Row(
               children: [
                 Spacer(),
@@ -211,30 +171,6 @@ class AddMemberDialogState extends State<AddMemberDialog> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget moneyInput(var i) {
-    return Padding(
-      padding: const EdgeInsets.all(2.0),
-      child: TextButton(
-        onPressed: () => print(i),
-        child: SizedBox(
-          height: 50,
-          width: 50,
-          child: Center(
-            child: Text(
-              i.toString(),
-              //style: TextStyle(color: Theme.of(context).primaryColor),
-            ),
-          ),
-        ),
-        style: ButtonStyle(
-            // shape: MaterialStateProperty.all(RoundedRectangleBorder(
-            //     borderRadius: BorderRadius.circular(30.0))),
-            backgroundColor:
-                MaterialStateProperty.all(Theme.of(context).backgroundColor)),
       ),
     );
   }
