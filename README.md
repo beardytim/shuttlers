@@ -21,4 +21,8 @@ A kitty app for my badminton group.
 
 - [ ] redesign main view
 - [ ] fix the dialogs - more of a flow?
+<<<<<<< HEAD
 - [ ] increase admin capability - edit previous games etc.
+=======
+- [ ] increase admin capability - edit previous games etc.
+>>>>>>> 1c53c847d06c97cfc2cac7115982e71b83059709
