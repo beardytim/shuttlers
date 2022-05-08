@@ -59,7 +59,8 @@ class AddFundsDialogState extends State<AddFundsDialog> {
         date: _date,
       );
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Added $_fundsToAdd to ${widget.member.name}.")));
+          content: Text(
+              "Added ${prettyMoney(_fundsToAdd)} to ${widget.member.name}.")));
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Something went wrong.")));
@@ -73,17 +74,6 @@ class AddFundsDialogState extends State<AddFundsDialog> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Add Funds to ${widget.member.name}'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () async {
-              saveFunds();
-            },
-            child: Text(
-              'SAVE',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
       ),
       body: Stepper(
         type: StepperType.vertical,
@@ -284,12 +274,15 @@ class AddFundsDialogState extends State<AddFundsDialog> {
                           TextButton(
                             onPressed: stepContinued,
                             child: const Text(
-                              'NEXT',
+                              'CONTINUE',
                               style: TextStyle(color: Colors.white),
                             ),
                             style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(
                                     Theme.of(context).primaryColor)),
+                          ),
+                          SizedBox(
+                            width: 10,
                           ),
                           TextButton(
                             onPressed: stepCanceled,

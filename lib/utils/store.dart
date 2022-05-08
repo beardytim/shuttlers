@@ -16,6 +16,13 @@ class Store {
     return member.orderBy('name').snapshots();
   }
 
+  Stream<QuerySnapshot> historyStream(Member data) {
+    return ledger
+        .orderBy('date', descending: true)
+        .where('members', arrayContains: data.id)
+        .snapshots();
+  }
+
   ///ledgers with category 1 will be shown here and ordered by date
   Stream<QuerySnapshot<Object?>> ledgerStream() {
     return ledger

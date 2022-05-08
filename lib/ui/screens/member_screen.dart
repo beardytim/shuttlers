@@ -33,7 +33,7 @@ class _MemberScreenState extends State<MemberScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('MemberScreen'),
+        title: Text('Members'),
         leading: IconButton(
           icon: Icon(Icons.menu),
           onPressed: () => ZoomDrawer.of(context)!.toggle(),

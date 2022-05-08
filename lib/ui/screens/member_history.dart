@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:shuttlers/data.dart';
 import 'package:shuttlers/model/expense.dart';
 import 'package:shuttlers/model/member.dart';
 import 'package:shuttlers/ui/widgets/history_card.dart';
+import 'package:shuttlers/utils/store.dart';
 
 class UserHistoryScreen extends StatefulWidget {
   final Member member;
@@ -15,24 +15,12 @@ class UserHistoryScreen extends StatefulWidget {
 class UserHistoryScreenState extends State<UserHistoryScreen> {
   Widget build(BuildContext context) {
     int x = 1;
-    final Member member = widget.member;
-    CollectionReference collectionReference =
-        FirebaseFirestore.instance.collection(ledgerRef);
-    Stream<QuerySnapshot> ledgerStream = collectionReference
-        .orderBy('date', descending: true)
-        .where('members', arrayContains: member.id)
-        .snapshots();
     Column _buildIncomeHistory() {
       return Column(
         children: <Widget>[
-          // Card(
-          //   child: ListTile(
-          //     title: Text("Current balance is ${prettyMoney(member.bank)}"),
-          //   ),
-          // ),
           Expanded(
             child: StreamBuilder(
-              stream: ledgerStream,
+              stream: Store().historyStream(widget.member),
               builder: (BuildContext context,
                   AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasError) {
@@ -62,7 +50,7 @@ class UserHistoryScreenState extends State<UserHistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${member.name} History'),
+        title: Text('${widget.member.name} History'),
       ),
       body: _buildIncomeHistory(),
     );

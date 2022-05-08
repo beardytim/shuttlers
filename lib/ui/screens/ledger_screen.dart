@@ -33,7 +33,7 @@ class _LedgerScreenState extends State<LedgerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('LedgerScreen'),
+        title: Text('Expenditure'),
         //leading: MenuWidget(),
         leading: IconButton(
           icon: Icon(Icons.menu),

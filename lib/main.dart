@@ -1,5 +1,4 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:shuttlers/ui/dialog/add_member.dart';
 import 'package:shuttlers/ui/screens/home_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +19,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(),
+      home: Home(), //Home()
     );
   }
 }

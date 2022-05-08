@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
-import 'package:shuttlers/passwords.dart';
 import 'package:shuttlers/ui/screens/ledger_screen.dart';
 import 'package:shuttlers/ui/screens/member_screen.dart';
 import 'package:shuttlers/utils/pretty.dart';
@@ -59,7 +58,7 @@ class MenuItem {
 
 class MenuItems {
   static const members = MenuItem('Members', Icons.people);
-  static const ledger = MenuItem('Ledger', Icons.sports_tennis);
+  static const ledger = MenuItem('Expenditure', Icons.list_alt_outlined);
 
   static const all = <MenuItem>[
     members,
@@ -110,13 +109,17 @@ class _MenuScreenState extends State<MenuScreen> {
                   children: [
                     CircleAvatar(
                       backgroundImage: AssetImage('icon/icon.png'),
-                      radius: 30,
+                      radius: 50,
                     ),
-                    Text(' Shuttlers')
+                    SizedBox(width: 10),
+                    Text(
+                      'Shuttlers',
+                      // style: Theme.of(context).textTheme.headline5,
+                    )
                   ],
                 ),
               ),
-              Spacer(),
+              Spacer(flex: 2),
               ...MenuItems.all.map(buildMenuItem).toList(),
               Spacer(flex: 2),
               ListTile(
@@ -157,7 +160,18 @@ class _MenuScreenState extends State<MenuScreen> {
                   //setState(() {});
                   ZoomDrawer.of(context)!.toggle();
                 },
-              )
+              ),
+              user == null
+                  ? Container()
+                  : ListTile(
+                      minLeadingWidth: 20,
+                      leading: Icon(Icons.password),
+                      title: Text('Change Password'),
+                      onTap: () async {
+                        await _changePasswordDialog(context);
+                        ZoomDrawer.of(context)!.toggle();
+                      },
+                    ),
             ],
           ),
         ),
@@ -199,17 +213,81 @@ class _MenuScreenState extends State<MenuScreen> {
               TextButton(
                 child: Text('LOGIN'),
                 onPressed: () async {
-                  //setState(() {});
                   try {
-                    //email is stored in a string in passwords.dart
                     await auth.signInWithEmailAndPassword(
-                        email: email, password: _passwordController.text);
+                        email: 'tim.simmonds1@gmail.com',
+                        password: _passwordController.text);
                     ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(content: Text("Logged in!")));
                   } catch (e) {
                     ScaffoldMessenger.of(context)
                         .showSnackBar(SnackBar(content: Text("Login failed.")));
                   }
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  Future<void> _changePasswordDialog(BuildContext context) async {
+    TextEditingController _passwordController = TextEditingController();
+    TextEditingController _passwordControllerConfirm = TextEditingController();
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Change Password'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  obscureText: true,
+                  controller: _passwordController,
+                  decoration: InputDecoration(hintText: 'Enter New Password'),
+                ),
+                TextFormField(
+                  obscureText: true,
+                  controller: _passwordControllerConfirm,
+                  decoration: InputDecoration(hintText: 'Confirm New Password'),
+                )
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: Text('CANCEL'),
+                onPressed: () {
+                  setState(() {
+                    Navigator.pop(context);
+                  });
+                },
+              ),
+              TextButton(
+                child: Text('CHANGE'),
+                onPressed: () async {
+                  setState(() {});
+
+                  if (_passwordController.text ==
+                      _passwordControllerConfirm.text) {
+                    try {
+                      // if persistance causing issues with the signedIn bool could just sign out before anyone logs in?!
+                      //await auth.signOut();
+
+                      await auth.currentUser!
+                          .updatePassword(_passwordController.text);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Password changed!")));
+                    } catch (e) {
+                      print(e);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Something went wrong.")));
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Passwords didn't match!")));
+                  }
+
                   Navigator.pop(context);
                 },
               ),
