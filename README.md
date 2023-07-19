@@ -18,11 +18,6 @@ A kitty app for my badminton group.
 - Deployed as an Android app and also on GitHub pages. [Click here to check it out!](https://beardytim.github.io/shuttlers/)
 
 ## To Do
-
-- [ ] redesign main view
-- [ ] fix the dialogs - more of a flow?
-<<<<<<< HEAD
+
 - [ ] increase admin capability - edit previous games etc.
-=======
-- [ ] increase admin capability - edit previous games etc.
->>>>>>> 1c53c847d06c97cfc2cac7115982e71b83059709
+- [ ] input cost through numberpad
